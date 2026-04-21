@@ -7,12 +7,13 @@ import { cn } from '@/lib/utils'
 interface NavbarProps {
   manager: string
   onLogout: () => void
+  activePage: string
+  onNavigate: (page: string) => void
 }
 
 const NAV_ITEMS = ['Dashboard', 'Employees', 'Departments', 'Reports', 'Settings']
 
-export function Navbar({ manager, onLogout }: NavbarProps) {
-  const [active, setActive] = useState('Dashboard')
+export function Navbar({ manager, onLogout, activePage, onNavigate }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -36,9 +37,9 @@ export function Navbar({ manager, onLogout }: NavbarProps) {
                 key={item}
                 variant="ghost"
                 size="sm"
-                onClick={() => setActive(item)}
+                onClick={() => onNavigate(item)}
                 className={cn(
-                  active === item && 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.15)] hover:text-[hsl(var(--primary))]'
+                  activePage === item && 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.15)] hover:text-[hsl(var(--primary))]'
                 )}
               >
                 {item}
@@ -84,9 +85,9 @@ export function Navbar({ manager, onLogout }: NavbarProps) {
               size="sm"
               className={cn(
                 'w-full justify-start',
-                active === item && 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.15)] hover:text-[hsl(var(--primary))]'
+                activePage === item && 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.15)] hover:text-[hsl(var(--primary))]'
               )}
-              onClick={() => { setActive(item); setMenuOpen(false) }}
+              onClick={() => { onNavigate(item); setMenuOpen(false) }}
             >
               {item}
             </Button>

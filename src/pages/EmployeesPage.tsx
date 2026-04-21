@@ -1,0 +1,45 @@
+import { useState } from 'react'
+import { EmployeeSearch } from '@/components/employees/EmployeeSearch'
+import { EmployeeTable } from '@/components/employees/EmployeeTable'
+import type { Employee, Status } from '@/types/employee'
+
+interface EmployeesPageProps {
+  initialSearch?: string
+  employees: Employee[]
+  onStatusChange: (id: number, status: Status) => void
+}
+
+export function EmployeesPage({ initialSearch = '', employees, onStatusChange }: EmployeesPageProps) {
+  const [search, setSearch] = useState(initialSearch)
+
+  const terms = search
+    .split(/[\s,]+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+
+  const filtered = employees.filter((e) => {
+    const haystack = [e.name, e.role, e.team, ...e.skills].map((v) => v.toLowerCase())
+    // Any term must match at least one field (OR logic)
+    return terms.length === 0 || terms.some((term) => haystack.some((v) => v.includes(term)))
+  })
+
+  function handleStatusChange(id: number, status: Status) {
+    onStatusChange(id, status)
+  }
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <EmployeeSearch
+        value={search}
+        total={employees.length}
+        filtered={filtered.length}
+        onChange={setSearch}
+      />
+      <EmployeeTable
+        employees={filtered}
+        onStatusChange={handleStatusChange}
+      />
+    </main>
+  )
+}
+
