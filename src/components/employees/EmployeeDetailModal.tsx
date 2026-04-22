@@ -3,14 +3,16 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { EmployeeActions } from '@/components/employees/EmployeeActions'
-import type { Employee, Status } from '@/types/employee'
+import type { Employee, Status, FreezeDetails } from '@/types/employee'
 import { STATUS_CONFIG } from '@/types/employee'
 
 interface EmployeeDetailModalProps {
   employee: Employee | null
+  managerName: string
+  managerEmail: string
   open: boolean
   onClose: () => void
-  onStatusChange: (id: number, status: Status) => void
+  onStatusChange: (id: number, status: Status, freezeDetails?: FreezeDetails) => void
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -22,10 +24,11 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function EmployeeDetailModal({ employee, open, onClose, onStatusChange }: EmployeeDetailModalProps) {
+export function EmployeeDetailModal({ employee, managerName, managerEmail, open, onClose, onStatusChange }: EmployeeDetailModalProps) {
   if (!employee) return null
 
   const { label, variant } = STATUS_CONFIG[employee.status]
+  const fd = employee.freezeDetails
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose() }}>
@@ -73,14 +76,40 @@ export function EmployeeDetailModal({ employee, open, onClose, onStatusChange }:
           </div>
         </div>
 
+        {/* Freeze Details — visible only when frozen */}
+        {employee.status === 'frozen' && fd && (
+          <>
+            <Separator className='mt-4 mb-4' />
+            <div>
+              <span className="text-xs font-medium text-amber-600 uppercase tracking-wide">Freeze Details</span>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 mt-3">
+                <DetailRow label="Project"  value={fd.projectName} />
+                <DetailRow label="Manager"  value={fd.managerName} />
+                <DetailRow label="From"     value={fd.startDate} />
+                {fd.endDate && <DetailRow label="Until" value={fd.endDate} />}
+                {fd.notes && (
+                  <div className="col-span-2 flex flex-col gap-0.5">
+                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Notes</span>
+                    <span className="text-sm text-[hsl(var(--foreground))]">{fd.notes}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         <Separator className='mt-4 mb-4' />
 
         {/* Actions */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Actions</span>
           <EmployeeActions
+            employeeName={employee.name}
+            managerName={managerName}
+            managerEmail={managerEmail}
+            lockedByManagerEmail={employee.lockedByManagerEmail}
             status={employee.status}
-            onFreeze={() => { onStatusChange(employee.id, 'frozen'); onClose() }}
+            onFreeze={(details) => { onStatusChange(employee.id, 'frozen', details); onClose() }}
             onBlock={() => { onStatusChange(employee.id, 'blocked'); onClose() }}
             onRelease={() => { onStatusChange(employee.id, 'available'); onClose() }}
           />

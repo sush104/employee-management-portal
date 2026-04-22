@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { EmployeeSearch } from '@/components/employees/EmployeeSearch'
 import { EmployeeTable } from '@/components/employees/EmployeeTable'
-import type { Employee, Status } from '@/types/employee'
+import type { Employee, Status, FreezeDetails } from '@/types/employee'
 
 interface EmployeesPageProps {
   initialSearch?: string
+  managerName: string
+  managerEmail: string
   employees: Employee[]
-  onStatusChange: (id: number, status: Status) => void
+  onStatusChange: (id: number, status: Status, freezeDetails?: FreezeDetails) => void
 }
 
-export function EmployeesPage({ initialSearch = '', employees, onStatusChange }: EmployeesPageProps) {
+export function EmployeesPage({ initialSearch = '', managerName, managerEmail, employees, onStatusChange }: EmployeesPageProps) {
   const [search, setSearch] = useState(initialSearch)
 
   const terms = search
@@ -23,8 +25,8 @@ export function EmployeesPage({ initialSearch = '', employees, onStatusChange }:
     return terms.length === 0 || terms.some((term) => haystack.some((v) => v.includes(term)))
   })
 
-  function handleStatusChange(id: number, status: Status) {
-    onStatusChange(id, status)
+  function handleStatusChange(id: number, status: Status, freezeDetails?: FreezeDetails) {
+    onStatusChange(id, status, freezeDetails)
   }
 
   return (
@@ -37,6 +39,8 @@ export function EmployeesPage({ initialSearch = '', employees, onStatusChange }:
       />
       <EmployeeTable
         employees={filtered}
+        managerName={managerName}
+        managerEmail={managerEmail}
         onStatusChange={handleStatusChange}
       />
     </main>

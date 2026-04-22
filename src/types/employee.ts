@@ -1,5 +1,13 @@
 export type Status = 'available' | 'blocked' | 'frozen'
 
+export interface FreezeDetails {
+  projectName: string
+  managerName: string
+  startDate: string
+  endDate: string
+  notes: string
+}
+
 export interface Employee {
   id: number
   name: string
@@ -15,6 +23,8 @@ export interface Employee {
   department: string
   joinedDate: string
   bio: string
+  freezeDetails?: FreezeDetails
+  lockedByManagerEmail?: string | null
 }
 
 export const STATUS_CONFIG: Record<Status, { label: string; variant: 'success' | 'warning' | 'secondary' }> = {

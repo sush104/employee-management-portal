@@ -5,15 +5,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmployeeActions } from '@/components/employees/EmployeeActions'
 import { EmployeeDetailModal } from '@/components/employees/EmployeeDetailModal'
-import type { Employee, Status } from '@/types/employee'
+import type { Employee, Status, FreezeDetails } from '@/types/employee'
 import { STATUS_CONFIG } from '@/types/employee'
 
 interface EmployeeTableProps {
   employees: Employee[]
-  onStatusChange: (id: number, status: Status) => void
+  managerName: string
+  managerEmail: string
+  onStatusChange: (id: number, status: Status, freezeDetails?: FreezeDetails) => void
 }
 
-export function EmployeeTable({ employees, onStatusChange }: EmployeeTableProps) {
+export function EmployeeTable({ employees, managerName, managerEmail, onStatusChange }: EmployeeTableProps) {
   const [selected, setSelected] = useState<Employee | null>(null)
 
   return (
@@ -75,8 +77,12 @@ export function EmployeeTable({ employees, onStatusChange }: EmployeeTableProps)
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <EmployeeActions
+                          employeeName={emp.name}
+                          managerName={managerName}
+                          managerEmail={managerEmail}
+                          lockedByManagerEmail={emp.lockedByManagerEmail}
                           status={emp.status}
-                          onFreeze={() => onStatusChange(emp.id, 'frozen')}
+                          onFreeze={(details) => onStatusChange(emp.id, 'frozen', details)}
                           onBlock={() => onStatusChange(emp.id, 'blocked')}
                           onRelease={() => onStatusChange(emp.id, 'available')}
                         />
@@ -92,6 +98,8 @@ export function EmployeeTable({ employees, onStatusChange }: EmployeeTableProps)
 
       <EmployeeDetailModal
         employee={selected}
+        managerName={managerName}
+        managerEmail={managerEmail}
         open={selected !== null}
         onClose={() => setSelected(null)}
         onStatusChange={onStatusChange}
