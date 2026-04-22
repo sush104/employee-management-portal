@@ -1,18 +1,19 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { EmployeeSearch } from '@/components/employees/EmployeeSearch'
 import { EmployeeTable } from '@/components/employees/EmployeeTable'
 import type { Employee, Status, FreezeDetails } from '@/types/employee'
 
 interface EmployeesPageProps {
-  initialSearch?: string
   managerName: string
   managerEmail: string
   employees: Employee[]
   onStatusChange: (id: number, status: Status, freezeDetails?: FreezeDetails) => void
 }
 
-export function EmployeesPage({ initialSearch = '', managerName, managerEmail, employees, onStatusChange }: EmployeesPageProps) {
-  const [search, setSearch] = useState(initialSearch)
+export function EmployeesPage({ managerName, managerEmail, employees, onStatusChange }: EmployeesPageProps) {
+  const [searchParams] = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
 
   const terms = search
     .split(/[\s,]+/)

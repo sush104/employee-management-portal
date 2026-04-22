@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Users, Building2, UserCheck, UserX, type LucideIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,6 @@ import type { Employee } from '@/types/employee'
 
 interface DashboardProps {
   employees: Employee[]
-  onSearch: (query: string) => void
 }
 
 interface Stat {
@@ -20,8 +20,9 @@ interface Stat {
   iconColor: string
 }
 
-export function Dashboard({ employees, onSearch }: DashboardProps) {
+export function Dashboard({ employees }: DashboardProps) {
   const [query, setQuery] = useState('')
+  const navigate = useNavigate()
 
   const total       = employees.length
   const departments = new Set(employees.map((e) => e.department)).size
@@ -37,7 +38,7 @@ export function Dashboard({ employees, onSearch }: DashboardProps) {
   ]
 
   function handleSearch() {
-    if (query.trim()) onSearch(query.trim())
+    if (query.trim()) navigate(`/employees?q=${encodeURIComponent(query.trim())}`)
   }
 
   return (

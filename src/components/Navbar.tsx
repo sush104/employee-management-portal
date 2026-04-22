@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
@@ -7,14 +8,25 @@ import { cn } from '@/lib/utils'
 interface NavbarProps {
   manager: string
   onLogout: () => void
-  activePage: string
-  onNavigate: (page: string) => void
 }
 
 const NAV_ITEMS = ['Dashboard', 'Employees', 'Departments', 'Reports', 'Settings']
 
-export function Navbar({ manager, onLogout, activePage, onNavigate }: NavbarProps) {
+const NAV_ROUTES: Record<string, string> = {
+  Dashboard: '/',
+  Employees: '/employees',
+  Departments: '/departments',
+  Reports: '/reports',
+  Settings: '/settings',
+}
+
+export function Navbar({ manager, onLogout }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const activePage = NAV_ITEMS.find((item) =>
+    item === 'Dashboard' ? pathname === '/' : pathname.startsWith(NAV_ROUTES[item])
+  ) ?? 'Dashboard'
 
   return (
     <header className="bg-[hsl(var(--card))] border-b border-[hsl(var(--border))] sticky top-0 z-50">
@@ -37,7 +49,7 @@ export function Navbar({ manager, onLogout, activePage, onNavigate }: NavbarProp
                 key={item}
                 variant="ghost"
                 size="sm"
-                onClick={() => onNavigate(item)}
+                onClick={() => navigate(NAV_ROUTES[item])}
                 className={cn(
                   activePage === item && 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.15)] hover:text-[hsl(var(--primary))]'
                 )}
@@ -87,7 +99,7 @@ export function Navbar({ manager, onLogout, activePage, onNavigate }: NavbarProp
                 'w-full justify-start',
                 activePage === item && 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.15)] hover:text-[hsl(var(--primary))]'
               )}
-              onClick={() => { onNavigate(item); setMenuOpen(false) }}
+              onClick={() => { navigate(NAV_ROUTES[item]); setMenuOpen(false) }}
             >
               {item}
             </Button>

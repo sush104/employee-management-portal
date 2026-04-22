@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoginForm } from './components/LoginForm'
 import { Navbar } from './components/Navbar'
 import { Dashboard } from './pages/DashboardPage'
 import { EmployeesPage } from './pages/EmployeesPage'
 import { ReportsPage } from './pages/ReportsPage'
+import { DepartmentsPage } from './pages/DepartmentsPage'
 import type { Employee, Status, FreezeDetails } from './types/employee'
 
 function App() {
   const [manager, setManager] = useState<string | null>(null)
-  const [page, setPage] = useState('Dashboard')
-  const [employeeSearch, setEmployeeSearch] = useState('')
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [releaseError, setReleaseError] = useState<string | null>(null)
@@ -24,11 +24,6 @@ function App() {
 
   if (!manager) {
     return <LoginForm onLogin={(email) => setManager(email)} />
-  }
-
-  function navigate(p: string, search = '') {
-    setEmployeeSearch(search)
-    setPage(p)
   }
 
   async function handleStatusChange(id: number, status: Status, freezeDetails?: FreezeDetails) {
@@ -78,8 +73,6 @@ function App() {
       <Navbar
         manager={manager}
         onLogout={() => setManager(null)}
-        activePage={page}
-        onNavigate={(p) => navigate(p)}
       />
 
       {/* Release-denied error banner */}
@@ -101,27 +94,23 @@ function App() {
           <span className="text-[hsl(var(--muted-foreground))]">Loading employees…</span>
         </div>
       ) : (
-        <>
-          {page === 'Dashboard' && (
-            <Dashboard
-              employees={employees}
-              onSearch={(q) => navigate('Employees', q)}
-            />
-          )}
-          {page === 'Employees' && (
-            <EmployeesPage
-              key={employeeSearch}
-              initialSearch={employeeSearch}
-              managerName={manager.split('@')[0].replace(/^./, (c) => c.toUpperCase())}
-              managerEmail={manager}
-              employees={employees}
-              onStatusChange={handleStatusChange}
-            />
-          )}
-          {page === 'Reports' && (
-            <ReportsPage employees={employees} />
-          )}
-        </>
+        <Routes>
+          <Route path="/" element={<Dashboard employees={employees} />} />
+          <Route
+            path="/employees"
+            element={
+              <EmployeesPage
+                managerName={manager.split('@')[0].replace(/^./, (c) => c.toUpperCase())}
+                managerEmail={manager}
+                employees={employees}
+                onStatusChange={handleStatusChange}
+              />
+            }
+          />
+          <Route path="/reports" element={<ReportsPage employees={employees} />} />
+          <Route path="/departments" element={<DepartmentsPage employees={employees} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       )}
     </div>
   )
