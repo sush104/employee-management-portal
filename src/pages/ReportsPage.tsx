@@ -224,6 +224,7 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                     <TableHead>Project</TableHead>
                     <TableHead>Manager</TableHead>
                     <TableHead>From</TableHead>
+                    <TableHead>Until</TableHead>
                     <TableHead>Expires In</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -257,6 +258,9 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                       </TableCell>
                       <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">
                         {emp.freezeDetails?.startDate ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">
+                        {emp.freezeDetails?.endDate ?? '—'}
                       </TableCell>
                       <TableCell className="text-sm whitespace-nowrap">
                         {emp.status === 'frozen' && emp.freezeDetails?.expiryDate ? (

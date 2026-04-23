@@ -98,8 +98,8 @@ export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailM
           </div>
         </div>
 
-        {/* Freeze Details — visible only when frozen */}
-        {employee.status === 'frozen' && fd && (
+        {/* Freeze details — visible for frozen and blocked employees */}
+        {(employee.status === 'frozen' || employee.status === 'blocked') && fd && (
           <>
             <Separator className='mt-4 mb-4' />
             <div>
@@ -108,15 +108,13 @@ export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailM
                 <DetailRow label="Project"  value={fd.projectName} />
                 <DetailRow label="Manager"  value={fd.managerName} />
                 <DetailRow label="From"     value={fd.startDate} />
-                {fd.expiryDate ? (
+                {employee.status === 'frozen' && fd.expiryDate ? (
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-medium text-amber-700 uppercase tracking-wide">Auto-Expires In</span>
                     <span className="text-sm font-semibold text-amber-700">{formatTimeRemaining(fd.expiryDate)}</span>
                     <span className="text-xs text-amber-600">{new Date(fd.expiryDate).toLocaleString()}</span>
                   </div>
-                ) : (
-                  <div className="text-xs text-gray-500">No expiry set</div>
-                )}
+                ) : null}
                 {fd.endDate && <DetailRow label="Until" value={fd.endDate} />}
                 {fd.notes && (
                   <div className="col-span-2 flex flex-col gap-0.5">

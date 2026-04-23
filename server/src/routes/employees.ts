@@ -141,11 +141,6 @@ employeeRouter.patch('/:id/status', async (req, res) => {
         `UPDATE employees
          SET status                  = 'blocked',
              locked_by_manager_email = $1,
-             freeze_project_name     = NULL,
-             freeze_manager_name     = NULL,
-             freeze_start_date       = NULL,
-             freeze_end_date         = NULL,
-             freeze_notes            = NULL,
              freeze_expiry           = NULL
          WHERE id = $2
          RETURNING *`,
@@ -178,7 +173,7 @@ employeeRouter.patch('/:id/status', async (req, res) => {
 
 function toEmployee(row: Record<string, unknown>) {
   const freezeDetails =
-    row.status === 'frozen'
+    (row.status === 'frozen' || row.status === 'blocked')
       ? {
           projectName: (row.freeze_project_name as string) ?? '',
           managerName: (row.freeze_manager_name as string) ?? '',
