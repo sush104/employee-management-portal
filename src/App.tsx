@@ -15,11 +15,33 @@ function App() {
   const [releaseError, setReleaseError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/employees')
-      .then((res) => res.json())
-      .then((data: Employee[]) => setEmployees(data))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    let isMounted = true
+
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch('/api/employees')
+        if (!res.ok) throw new Error('Failed to fetch employees')
+        const data: Employee[] = await res.json()
+        if (isMounted) setEmployees(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error(err)
+        if (isMounted) setEmployees([])
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    void fetchEmployees()
+
+    const POLL_INTERVAL_MS = 30000
+    const interval = setInterval(() => {
+      void fetchEmployees()
+    }, POLL_INTERVAL_MS)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   if (!manager) {
