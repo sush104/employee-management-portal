@@ -15,19 +15,33 @@ employeeRouter.get('/', async (_req, res) => {
 })
 
 async function releaseExpiredFreezes() {
-  await pool.query(
-    `UPDATE employees
-     SET status                  = 'available',
-         locked_by_manager_email = NULL,
-         freeze_project_name     = NULL,
-         freeze_manager_name     = NULL,
-         freeze_start_date       = NULL,
-         freeze_end_date         = NULL,
-         freeze_notes            = NULL
-     WHERE status = 'frozen'
-       AND substring(freeze_start_date from 1 for 10) ~ '^\\d{4}-\\d{2}-\\d{2}$'
-       AND (substring(freeze_start_date from 1 for 10)::date + INTERVAL '3 days') <= CURRENT_DATE`
-  )
+  try {
+    // Check if freeze_expiry column exists before using it
+    const columnCheck = await pool.query(
+      `SELECT column_name FROM information_schema.columns 
+       WHERE table_name='employees' AND column_name='freeze_expiry'`
+    )
+    
+    if (columnCheck.rows.length > 0) {
+      await pool.query(
+        `UPDATE employees
+         SET status                  = 'available',
+             locked_by_manager_email = NULL,
+             freeze_project_name     = NULL,
+             freeze_manager_name     = NULL,
+             freeze_start_date       = NULL,
+             freeze_end_date         = NULL,
+             freeze_notes            = NULL,
+             freeze_expiry           = NULL
+         WHERE status = 'frozen'
+           AND freeze_expiry IS NOT NULL
+           AND freeze_expiry <= NOW()`
+      )
+    }
+  } catch (err) {
+    // Silently fail if column doesn't exist
+    console.error('releaseExpiredFreezes error (non-blocking):', err)
+  }
 }
 
 // ─── POST /api/employees/:id/freeze ────────────────────────────────────────
@@ -51,6 +65,8 @@ employeeRouter.post('/:id/freeze', async (req, res) => {
   }
 
   const freezeStartDate = new Date().toISOString().slice(0, 10)
+  // Auto-expiry: 72 hours (3 days) from now
+  const freezeExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
 
   try {
     const { rows } = await pool.query(
@@ -61,10 +77,11 @@ employeeRouter.post('/:id/freeze', async (req, res) => {
            freeze_manager_name     = $3,
            freeze_start_date       = $4,
            freeze_end_date         = $5,
-           freeze_notes            = $6
-       WHERE id = $7
+           freeze_notes            = $6,
+           freeze_expiry           = $7
+       WHERE id = $8
        RETURNING *`,
-      [managerEmail, projectName, managerName, freezeStartDate, endDate ?? null, notes ?? null, id]
+      [managerEmail, projectName, managerName, freezeStartDate, endDate ?? null, notes ?? null, freezeExpiry, id]
     )
     if (rows.length === 0) {
       res.status(404).json({ error: 'Employee not found' })
@@ -128,7 +145,8 @@ employeeRouter.patch('/:id/status', async (req, res) => {
              freeze_manager_name     = NULL,
              freeze_start_date       = NULL,
              freeze_end_date         = NULL,
-             freeze_notes            = NULL
+             freeze_notes            = NULL,
+             freeze_expiry           = NULL
          WHERE id = $2
          RETURNING *`,
         [managerEmail, id]
@@ -143,7 +161,8 @@ employeeRouter.patch('/:id/status', async (req, res) => {
              freeze_manager_name     = NULL,
              freeze_start_date       = NULL,
              freeze_end_date         = NULL,
-             freeze_notes            = NULL
+             freeze_notes            = NULL,
+             freeze_expiry           = NULL
          WHERE id = $1
          RETURNING *`,
         [id]
@@ -166,6 +185,7 @@ function toEmployee(row: Record<string, unknown>) {
           startDate:   (row.freeze_start_date   as string) ?? '',
           endDate:     (row.freeze_end_date      as string) ?? '',
           notes:       (row.freeze_notes         as string) ?? '',
+          expiryDate:  row.freeze_expiry ? new Date(row.freeze_expiry as any).toISOString() : '',
         }
       : undefined
 

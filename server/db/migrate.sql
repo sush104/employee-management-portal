@@ -21,4 +21,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='employees' AND column_name='freeze_notes') THEN
     ALTER TABLE employees ADD COLUMN freeze_notes TEXT;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='employees' AND column_name='freeze_expiry') THEN
+    ALTER TABLE employees ADD COLUMN freeze_expiry TIMESTAMP;
+  END IF;
 END$$;

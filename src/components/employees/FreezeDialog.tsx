@@ -132,6 +132,13 @@ export function FreezeDialog({ employeeName, managerName, open, onClose, onConfi
             </div>
           </div>
 
+          {/* Auto-expiry info */}
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+            <p className="text-xs text-amber-900">
+              <span className="font-semibold">Auto-release:</span> This freeze will automatically release after <span className="font-semibold">72 hours</span> from the start date.
+            </p>
+          </div>
+
           {/* Notes */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="freeze-notes">Notes</Label>

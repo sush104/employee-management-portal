@@ -19,5 +19,7 @@ CREATE TABLE IF NOT EXISTS employees (
   freeze_manager_name      TEXT,
   freeze_start_date        TEXT,
   freeze_end_date          TEXT,
-  freeze_notes             TEXT
+  freeze_notes             TEXT,
+  -- Auto-expiry: timestamp when freeze will auto-release (72 hours from freeze start)
+  freeze_expiry            TIMESTAMP
 );

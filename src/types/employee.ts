@@ -6,6 +6,7 @@ export interface FreezeDetails {
   startDate: string
   endDate: string
   notes: string
+  expiryDate?: string
 }
 
 export interface Employee {

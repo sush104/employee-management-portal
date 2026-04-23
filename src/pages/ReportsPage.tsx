@@ -2,6 +2,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
 } from 'recharts'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -23,7 +24,30 @@ const STATUS_COLORS: Record<string, string> = {
   blocked:   '#ef4444',
 }
 
+function formatTimeRemaining(expiryDate: string): string {
+  const expiry = new Date(expiryDate)
+  const now = new Date()
+  const diffMs = expiry.getTime() - now.getTime()
+  
+  if (diffMs <= 0) return 'Expired'
+  
+  const hours = Math.floor(diffMs / (1000 * 60 * 60))
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
+}
+
 export function ReportsPage({ managerName, managerEmail, employees, onStatusChange }: ReportsPageProps) {
+  const [, setRefresh] = useState(0)
+
+  // Update countdown every second
+  useEffect(() => {
+    const interval = setInterval(() => setRefresh(r => r + 1), 1000)
+    return () => clearInterval(interval)
+  }, [])
   const total     = employees.length
   const available = employees.filter((e) => e.status === 'available').length
   const frozen    = employees.filter((e) => e.status === 'frozen').length
@@ -200,6 +224,7 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                     <TableHead>Project</TableHead>
                     <TableHead>Manager</TableHead>
                     <TableHead>From</TableHead>
+                    <TableHead>Expires In</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -232,6 +257,13 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                       </TableCell>
                       <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">
                         {emp.freezeDetails?.startDate ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-sm whitespace-nowrap">
+                        {emp.status === 'frozen' && emp.freezeDetails?.expiryDate ? (
+                          <span className="font-semibold text-amber-700">{formatTimeRemaining(emp.freezeDetails.expiryDate)}</span>
+                        ) : (
+                          <span className="text-[hsl(var(--muted-foreground))]">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <EmployeeActions

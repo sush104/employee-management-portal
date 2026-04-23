@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +21,32 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function formatTimeRemaining(expiryDate: string): string {
+  const expiry = new Date(expiryDate)
+  const now = new Date()
+  const diffMs = expiry.getTime() - now.getTime()
+  
+  if (diffMs <= 0) return 'Expired'
+  
+  const hours = Math.floor(diffMs / (1000 * 60 * 60))
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`
+  }
+  return `${minutes}m remaining`
+}
+
 export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailModalProps) {
+  const [, setRefresh] = useState(0)
+
+  // Update countdown every second
+  useEffect(() => {
+    if (!open) return
+    const interval = setInterval(() => setRefresh(r => r + 1), 1000)
+    return () => clearInterval(interval)
+  }, [open])
+
   if (!employee) return null
 
   const { label, variant } = STATUS_CONFIG[employee.status]
@@ -82,6 +108,15 @@ export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailM
                 <DetailRow label="Project"  value={fd.projectName} />
                 <DetailRow label="Manager"  value={fd.managerName} />
                 <DetailRow label="From"     value={fd.startDate} />
+                {fd.expiryDate ? (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-medium text-amber-700 uppercase tracking-wide">Auto-Expires In</span>
+                    <span className="text-sm font-semibold text-amber-700">{formatTimeRemaining(fd.expiryDate)}</span>
+                    <span className="text-xs text-amber-600">{new Date(fd.expiryDate).toLocaleString()}</span>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500">No expiry set</div>
+                )}
                 {fd.endDate && <DetailRow label="Until" value={fd.endDate} />}
                 {fd.notes && (
                   <div className="col-span-2 flex flex-col gap-0.5">
