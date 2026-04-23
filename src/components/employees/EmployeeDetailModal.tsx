@@ -2,17 +2,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { EmployeeActions } from '@/components/employees/EmployeeActions'
-import type { Employee, Status, FreezeDetails } from '@/types/employee'
+import type { Employee } from '@/types/employee'
 import { STATUS_CONFIG } from '@/types/employee'
 
 interface EmployeeDetailModalProps {
   employee: Employee | null
-  managerName: string
-  managerEmail: string
   open: boolean
   onClose: () => void
-  onStatusChange: (id: number, status: Status, freezeDetails?: FreezeDetails) => void
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -24,7 +20,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function EmployeeDetailModal({ employee, managerName, managerEmail, open, onClose, onStatusChange }: EmployeeDetailModalProps) {
+export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailModalProps) {
   if (!employee) return null
 
   const { label, variant } = STATUS_CONFIG[employee.status]
@@ -98,22 +94,6 @@ export function EmployeeDetailModal({ employee, managerName, managerEmail, open,
           </>
         )}
 
-        <Separator className='mt-4 mb-4' />
-
-        {/* Actions */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Actions</span>
-          <EmployeeActions
-            employeeName={employee.name}
-            managerName={managerName}
-            managerEmail={managerEmail}
-            lockedByManagerEmail={employee.lockedByManagerEmail}
-            status={employee.status}
-            onFreeze={(details) => { onStatusChange(employee.id, 'frozen', details); onClose() }}
-            onBlock={() => { onStatusChange(employee.id, 'blocked'); onClose() }}
-            onRelease={() => { onStatusChange(employee.id, 'available'); onClose() }}
-          />
-        </div>
       </SheetContent>
     </Sheet>
   )

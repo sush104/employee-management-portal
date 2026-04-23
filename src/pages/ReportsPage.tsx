@@ -6,11 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import type { Employee } from '@/types/employee'
+import { EmployeeActions } from '@/components/employees/EmployeeActions'
+import type { Employee, Status, FreezeDetails } from '@/types/employee'
 import { STATUS_CONFIG } from '@/types/employee'
 
 interface ReportsPageProps {
+  managerName: string
+  managerEmail: string
   employees: Employee[]
+  onStatusChange: (id: number, status: Status, freezeDetails?: FreezeDetails) => void
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -19,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
   blocked:   '#ef4444',
 }
 
-export function ReportsPage({ employees }: ReportsPageProps) {
+export function ReportsPage({ managerName, managerEmail, employees, onStatusChange }: ReportsPageProps) {
   const total     = employees.length
   const available = employees.filter((e) => e.status === 'available').length
   const frozen    = employees.filter((e) => e.status === 'frozen').length
@@ -55,8 +59,10 @@ export function ReportsPage({ employees }: ReportsPageProps) {
     .slice(0, 8)
     .map(([skill, count]) => ({ skill, count }))
 
-  // Frozen employees list
-  const frozenEmployees = employees.filter((e) => e.status === 'frozen')
+  // Frozen/blocked employees managed by the logged-in manager
+  const managedLockedEmployees = employees.filter(
+    (e) => (e.status === 'frozen' || e.status === 'blocked') && e.lockedByManagerEmail === managerEmail,
+  )
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -175,28 +181,32 @@ export function ReportsPage({ employees }: ReportsPageProps) {
           </CardContent>
         </Card>
 
-        {/* Frozen employees table */}
+        {/* Frozen/blocked employees table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Frozen Employees</CardTitle>
+            <CardTitle className="text-base">Frozen/Blocked by You</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {frozenEmployees.length === 0 ? (
+            {managedLockedEmployees.length === 0 ? (
               <p className="text-sm text-[hsl(var(--muted-foreground))] px-6 py-8 text-center">
-                No employees are currently frozen.
+                No employees are currently frozen or blocked by you.
               </p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employee</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Project</TableHead>
                     <TableHead>Manager</TableHead>
                     <TableHead>From</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {frozenEmployees.map((emp) => (
+                  {managedLockedEmployees.map((emp) => {
+                    const { label, variant } = STATUS_CONFIG[emp.status]
+                    return (
                     <TableRow key={emp.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -209,6 +219,9 @@ export function ReportsPage({ employees }: ReportsPageProps) {
                           </div>
                         </div>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant={variant}>{label}</Badge>
+                      </TableCell>
                       <TableCell className="text-sm">
                         {emp.freezeDetails?.projectName
                           ? <Badge variant="secondary">{emp.freezeDetails.projectName}</Badge>
@@ -220,57 +233,30 @@ export function ReportsPage({ employees }: ReportsPageProps) {
                       <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">
                         {emp.freezeDetails?.startDate ?? '—'}
                       </TableCell>
+                      <TableCell>
+                        <EmployeeActions
+                          employeeName={emp.name}
+                          managerName={managerName}
+                          managerEmail={managerEmail}
+                          lockedByManagerEmail={emp.lockedByManagerEmail}
+                          status={emp.status}
+                          onFreeze={(details) => onStatusChange(emp.id, 'frozen', details)}
+                          onBlock={() => onStatusChange(emp.id, 'blocked')}
+                          onRelease={() => onStatusChange(emp.id, 'available')}
+                          showFreezeOnAvailable={false}
+                          showBlockOnAvailable={false}
+                          showBlockOnFrozen={true}
+                        />
+                      </TableCell>
                     </TableRow>
-                  ))}
+                    )
+                  })}
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
       </div>
-
-      {/* All employees status summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">All Employees — Status Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Team</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {employees.map((emp) => {
-                const { label, variant } = STATUS_CONFIG[emp.status]
-                return (
-                  <TableRow key={emp.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <Avatar className="h-7 w-7">
-                          <AvatarFallback className="text-xs">{emp.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-sm whitespace-nowrap">{emp.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">{emp.role}</TableCell>
-                    <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">{emp.department}</TableCell>
-                    <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">{emp.team}</TableCell>
-                    <TableCell>
-                      <Badge variant={variant}>{label}</Badge>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </main>
   )
 }

@@ -5,6 +5,7 @@ export const employeeRouter = Router()
 
 employeeRouter.get('/', async (_req, res) => {
   try {
+    await releaseExpiredFreezes()
     const { rows } = await pool.query('SELECT * FROM employees ORDER BY id')
     res.json(rows.map(toEmployee))
   } catch (err) {
@@ -13,25 +14,43 @@ employeeRouter.get('/', async (_req, res) => {
   }
 })
 
+async function releaseExpiredFreezes() {
+  await pool.query(
+    `UPDATE employees
+     SET status                  = 'available',
+         locked_by_manager_email = NULL,
+         freeze_project_name     = NULL,
+         freeze_manager_name     = NULL,
+         freeze_start_date       = NULL,
+         freeze_end_date         = NULL,
+         freeze_notes            = NULL
+     WHERE status = 'frozen'
+       AND substring(freeze_start_date from 1 for 10) ~ '^\\d{4}-\\d{2}-\\d{2}$'
+       AND (substring(freeze_start_date from 1 for 10)::date + INTERVAL '3 days') <= CURRENT_DATE`
+  )
+}
+
 // ─── POST /api/employees/:id/freeze ────────────────────────────────────────
 interface FreezeBody {
   managerEmail: string
   projectName: string
   managerName: string
-  startDate: string
+  startDate?: string
   endDate?: string
   notes?: string
 }
 
 employeeRouter.post('/:id/freeze', async (req, res) => {
   const id = Number(req.params.id)
-  const { managerEmail, projectName, managerName, startDate, endDate, notes } =
+  const { managerEmail, projectName, managerName, endDate, notes } =
     req.body as FreezeBody
 
-  if (!managerEmail || !projectName || !managerName || !startDate) {
-    res.status(400).json({ error: 'managerEmail, projectName, managerName and startDate are required' })
+  if (!managerEmail || !projectName || !managerName) {
+    res.status(400).json({ error: 'managerEmail, projectName and managerName are required' })
     return
   }
+
+  const freezeStartDate = new Date().toISOString().slice(0, 10)
 
   try {
     const { rows } = await pool.query(
@@ -45,7 +64,7 @@ employeeRouter.post('/:id/freeze', async (req, res) => {
            freeze_notes            = $6
        WHERE id = $7
        RETURNING *`,
-      [managerEmail, projectName, managerName, startDate, endDate ?? null, notes ?? null, id]
+      [managerEmail, projectName, managerName, freezeStartDate, endDate ?? null, notes ?? null, id]
     )
     if (rows.length === 0) {
       res.status(404).json({ error: 'Employee not found' })

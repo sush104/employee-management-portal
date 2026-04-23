@@ -85,6 +85,8 @@ export function EmployeeTable({ employees, managerName, managerEmail, onStatusCh
                           onFreeze={(details) => onStatusChange(emp.id, 'frozen', details)}
                           onBlock={() => onStatusChange(emp.id, 'blocked')}
                           onRelease={() => onStatusChange(emp.id, 'available')}
+                          showBlockOnAvailable={false}
+                          showBlockOnFrozen={false}
                         />
                       </TableCell>
                     </TableRow>
@@ -98,11 +100,8 @@ export function EmployeeTable({ employees, managerName, managerEmail, onStatusCh
 
       <EmployeeDetailModal
         employee={selected}
-        managerName={managerName}
-        managerEmail={managerEmail}
         open={selected !== null}
         onClose={() => setSelected(null)}
-        onStatusChange={onStatusChange}
       />
     </>
   )

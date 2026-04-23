@@ -107,7 +107,17 @@ function App() {
               />
             }
           />
-          <Route path="/reports" element={<ReportsPage employees={employees} />} />
+          <Route
+            path="/reports"
+            element={
+              <ReportsPage
+                managerName={manager.split('@')[0].replace(/^./, (c) => c.toUpperCase())}
+                managerEmail={manager}
+                employees={employees}
+                onStatusChange={handleStatusChange}
+              />
+            }
+          />
           <Route path="/departments" element={<DepartmentsPage employees={employees} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

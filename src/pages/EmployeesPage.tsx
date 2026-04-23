@@ -26,10 +26,6 @@ export function EmployeesPage({ managerName, managerEmail, employees, onStatusCh
     return terms.length === 0 || terms.some((term) => haystack.some((v) => v.includes(term)))
   })
 
-  function handleStatusChange(id: number, status: Status, freezeDetails?: FreezeDetails) {
-    onStatusChange(id, status, freezeDetails)
-  }
-
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <EmployeeSearch
@@ -42,7 +38,7 @@ export function EmployeesPage({ managerName, managerEmail, employees, onStatusCh
         employees={filtered}
         managerName={managerName}
         managerEmail={managerEmail}
-        onStatusChange={handleStatusChange}
+        onStatusChange={onStatusChange}
       />
     </main>
   )
