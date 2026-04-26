@@ -1,5 +1,15 @@
 export type Status = 'available' | 'blocked' | 'frozen'
 
+export interface FreezeQueueItem {
+  priority: number
+  managerName: string
+  managerEmail: string
+  projectName: string
+  startDate: string
+  endDate: string
+  expiryDate: string
+}
+
 export interface FreezeDetails {
   projectName: string
   managerName: string
@@ -7,6 +17,10 @@ export interface FreezeDetails {
   endDate: string
   notes: string
   expiryDate?: string
+  priority?: number
+  totalQueued?: number
+  queueManagerEmails?: string[]
+  queue?: FreezeQueueItem[]
 }
 
 export interface Employee {

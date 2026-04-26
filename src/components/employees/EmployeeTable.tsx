@@ -44,6 +44,13 @@ export function EmployeeTable({ employees, managerName, managerEmail, onStatusCh
               ) : (
                 employees.map((emp) => {
                   const { label, variant } = STATUS_CONFIG[emp.status]
+                  const managerEmailNormalized = managerEmail.trim().toLowerCase()
+                  const queueManagerEmails = emp.freezeDetails?.queueManagerEmails ?? []
+                  const queueCount = emp.freezeDetails?.totalQueued ?? 0
+                  const managerAlreadyQueued = queueManagerEmails
+                    .map((e) => e.trim().toLowerCase())
+                    .includes(managerEmailNormalized)
+                  const freezeQueueFull = queueCount >= 3
                   return (
                     <TableRow key={emp.id} className="cursor-pointer" onClick={() => setSelected(emp)}>
                       <TableCell>
@@ -85,6 +92,7 @@ export function EmployeeTable({ employees, managerName, managerEmail, onStatusCh
                           onFreeze={(details) => onStatusChange(emp.id, 'frozen', details)}
                           onBlock={() => onStatusChange(emp.id, 'blocked')}
                           onRelease={() => onStatusChange(emp.id, 'available')}
+                          showFreezeOnFrozen={!managerAlreadyQueued && !freezeQueueFull}
                           showBlockOnAvailable={false}
                           showBlockOnFrozen={false}
                         />

@@ -105,6 +105,10 @@ export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailM
             <div>
               <span className="text-xs font-medium text-amber-600 uppercase tracking-wide">Freeze Details</span>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 mt-3">
+                <DetailRow
+                  label="Priority"
+                  value={`P${fd.priority ?? 1}${fd.totalQueued ? ` of ${fd.totalQueued}` : ''}`}
+                />
                 <DetailRow label="Project"  value={fd.projectName} />
                 <DetailRow label="Manager"  value={fd.managerName} />
                 <DetailRow label="From"     value={fd.startDate} />
@@ -120,6 +124,28 @@ export function EmployeeDetailModal({ employee, open, onClose }: EmployeeDetailM
                   <div className="col-span-2 flex flex-col gap-0.5">
                     <span className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Notes</span>
                     <span className="text-sm text-[hsl(var(--foreground))]">{fd.notes}</span>
+                  </div>
+                )}
+                {!!fd.queue?.length && (
+                  <div className="col-span-2 mt-1">
+                    <span className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">Priority Queue</span>
+                    <div className="mt-2 space-y-2">
+                      {fd.queue.map((item) => (
+                        <div
+                          key={`${item.priority}-${item.managerEmail}`}
+                          className="rounded-md border border-[hsl(var(--border))] p-2.5"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold text-amber-700">P{item.priority}</span>
+                            <span className="text-xs text-[hsl(var(--muted-foreground))]">{item.managerName}</span>
+                          </div>
+                          <p className="text-sm mt-1 text-[hsl(var(--foreground))]">{item.projectName}</p>
+                          <p className="text-xs mt-1 text-[hsl(var(--muted-foreground))]">
+                            {item.startDate}{item.endDate ? ` to ${item.endDate}` : ''}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

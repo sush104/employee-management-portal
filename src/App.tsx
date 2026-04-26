@@ -48,6 +48,8 @@ function App() {
     return <LoginForm onLogin={(email) => setManager(email)} />
   }
 
+  const managerEmail = manager.trim().toLowerCase()
+
   async function handleStatusChange(id: number, status: Status, freezeDetails?: FreezeDetails) {
     try {
       let res: Response
@@ -58,7 +60,7 @@ function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            managerEmail: manager,
+            managerEmail,
             projectName:  freezeDetails.projectName,
             managerName:  freezeDetails.managerName,
             startDate:    freezeDetails.startDate,
@@ -71,13 +73,18 @@ function App() {
         res = await fetch(`/api/employees/${id}/status`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status, managerEmail: manager }),
+          body: JSON.stringify({ status, managerEmail }),
         })
       }
 
       if (res.status === 403) {
         const data = await res.json()
         setReleaseError(data.error ?? 'You are not authorised to release this employee.')
+        return
+      }
+      if (res.status === 400) {
+        const data = await res.json()
+        setReleaseError(data.error ?? 'Action not allowed.')
         return
       }
       if (!res.ok) throw new Error('Failed to update status')
@@ -123,7 +130,7 @@ function App() {
             element={
               <EmployeesPage
                 managerName={manager.split('@')[0].replace(/^./, (c) => c.toUpperCase())}
-                managerEmail={manager}
+                managerEmail={managerEmail}
                 employees={employees}
                 onStatusChange={handleStatusChange}
               />
@@ -134,7 +141,7 @@ function App() {
             element={
               <ReportsPage
                 managerName={manager.split('@')[0].replace(/^./, (c) => c.toUpperCase())}
-                managerEmail={manager}
+                managerEmail={managerEmail}
                 employees={employees}
                 onStatusChange={handleStatusChange}
               />

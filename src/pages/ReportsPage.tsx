@@ -84,9 +84,11 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
     .map(([skill, count]) => ({ skill, count }))
 
   // Frozen/blocked employees managed by the logged-in manager
-  const managedLockedEmployees = employees.filter(
-    (e) => (e.status === 'frozen' || e.status === 'blocked') && e.lockedByManagerEmail === managerEmail,
-  )
+  const managerEmailNormalized = managerEmail.trim().toLowerCase()
+  const managedLockedEmployees = employees.filter((e) => {
+    const lockedBy = e.lockedByManagerEmail?.trim().toLowerCase()
+    return (e.status === 'frozen' || e.status === 'blocked') && lockedBy === managerEmailNormalized
+  })
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -221,6 +223,7 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                   <TableRow>
                     <TableHead>Employee</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
                     <TableHead>Project</TableHead>
                     <TableHead>Manager</TableHead>
                     <TableHead>From</TableHead>
@@ -232,6 +235,13 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                 <TableBody>
                   {managedLockedEmployees.map((emp) => {
                     const { label, variant } = STATUS_CONFIG[emp.status]
+                    const managerEmailNormalized = managerEmail.trim().toLowerCase()
+                    const queueManagerEmails = emp.freezeDetails?.queueManagerEmails ?? []
+                    const queueCount = emp.freezeDetails?.totalQueued ?? 0
+                    const managerAlreadyQueued = queueManagerEmails
+                      .map((e) => e.trim().toLowerCase())
+                      .includes(managerEmailNormalized)
+                    const freezeQueueFull = queueCount >= 3
                     return (
                     <TableRow key={emp.id}>
                       <TableCell>
@@ -247,6 +257,11 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                       </TableCell>
                       <TableCell>
                         <Badge variant={variant}>{label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-[hsl(var(--muted-foreground))] whitespace-nowrap">
+                        {emp.freezeDetails?.priority
+                          ? `P${emp.freezeDetails.priority}${emp.freezeDetails.totalQueued ? ` / ${emp.freezeDetails.totalQueued}` : ''}`
+                          : '—'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {emp.freezeDetails?.projectName
@@ -279,6 +294,7 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                           onFreeze={(details) => onStatusChange(emp.id, 'frozen', details)}
                           onBlock={() => onStatusChange(emp.id, 'blocked')}
                           onRelease={() => onStatusChange(emp.id, 'available')}
+                          showFreezeOnFrozen={!managerAlreadyQueued && !freezeQueueFull}
                           showFreezeOnAvailable={false}
                           showBlockOnAvailable={false}
                           showBlockOnFrozen={true}

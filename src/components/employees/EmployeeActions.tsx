@@ -13,6 +13,7 @@ interface EmployeeActionsProps {
   onBlock: () => void
   onRelease: () => void
   showFreezeOnAvailable?: boolean
+  showFreezeOnFrozen?: boolean
   showBlockOnAvailable?: boolean
   showBlockOnFrozen?: boolean
   showReleaseOnLocked?: boolean
@@ -28,11 +29,14 @@ export function EmployeeActions({
   onBlock,
   onRelease,
   showFreezeOnAvailable = true,
+  showFreezeOnFrozen = true,
   showBlockOnAvailable = true,
   showBlockOnFrozen = false,
   showReleaseOnLocked = true,
 }: EmployeeActionsProps) {
-  const canRelease = !lockedByManagerEmail || lockedByManagerEmail === managerEmail
+  const canRelease =
+    !lockedByManagerEmail ||
+    lockedByManagerEmail.trim().toLowerCase() === managerEmail.trim().toLowerCase()
   const [freezeOpen, setFreezeOpen] = useState(false)
 
   return (
@@ -63,13 +67,35 @@ export function EmployeeActions({
           </>
         )}
         {status === 'frozen' && showBlockOnFrozen && (
+          <>
+            {showFreezeOnFrozen && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+                onClick={() => setFreezeOpen(true)}
+              >
+                Queue Freeze (P2/P3)
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+              onClick={onBlock}
+            >
+              Block
+            </Button>
+          </>
+        )}
+        {status === 'frozen' && !showBlockOnFrozen && showFreezeOnFrozen && (
           <Button
             size="sm"
             variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-            onClick={onBlock}
+            className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+            onClick={() => setFreezeOpen(true)}
           >
-            Block
+            Queue Freeze (P2/P3)
           </Button>
         )}
         {(status === 'blocked' || status === 'frozen') && showReleaseOnLocked && (

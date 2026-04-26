@@ -21,5 +21,7 @@ CREATE TABLE IF NOT EXISTS employees (
   freeze_end_date          TEXT,
   freeze_notes             TEXT,
   -- Auto-expiry: timestamp when freeze will auto-release (72 hours from freeze start)
-  freeze_expiry            TIMESTAMP
+  freeze_expiry            TIMESTAMP,
+  -- Queue of up to 3 freeze requests ordered by priority (1 = highest)
+  freeze_queue             JSONB         NOT NULL DEFAULT '[]'::jsonb
 );

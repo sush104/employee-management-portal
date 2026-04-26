@@ -24,4 +24,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='employees' AND column_name='freeze_expiry') THEN
     ALTER TABLE employees ADD COLUMN freeze_expiry TIMESTAMP;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='employees' AND column_name='freeze_queue') THEN
+    ALTER TABLE employees ADD COLUMN freeze_queue JSONB NOT NULL DEFAULT '[]'::jsonb;
+  END IF;
 END$$;

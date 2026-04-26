@@ -135,7 +135,7 @@ export function FreezeDialog({ employeeName, managerName, open, onClose, onConfi
           {/* Auto-expiry info */}
           <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
             <p className="text-xs text-amber-900">
-              <span className="font-semibold">Auto-release:</span> This freeze will automatically release after <span className="font-semibold">72 hours</span> from the start date.
+              <span className="font-semibold">Queue rule:</span> Up to <span className="font-semibold">3 freezes</span> per employee, ordered by priority (P1 first). Each freeze auto-expires after <span className="font-semibold">72 hours</span>.
             </p>
           </div>
 
