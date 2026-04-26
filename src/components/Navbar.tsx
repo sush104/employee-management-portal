@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
@@ -35,10 +36,10 @@ export function Navbar({ manager, onLogout }: NavbarProps) {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))] flex items-center justify-center text-white text-sm font-bold">
-              EM
+              EMP
             </div>
             <span className="font-semibold text-[hsl(var(--foreground))] hidden sm:block">
-              Employee Portal
+              Employee Management Portal
             </span>
           </div>
 
@@ -65,7 +66,10 @@ export function Navbar({ manager, onLogout }: NavbarProps) {
               <Avatar className="h-7 w-7">
                 <AvatarFallback className="text-xs">{manager[0].toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="text-sm text-[hsl(var(--muted-foreground))] max-w-[140px] truncate">{manager}</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm text-[hsl(var(--foreground))] max-w-[140px] truncate">{manager}</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 w-fit">Manager</Badge>
+              </div>
             </div>
             <Separator orientation="vertical" className="h-6 hidden sm:block" />
             <Button variant="outline" size="sm" onClick={onLogout}>
@@ -104,6 +108,15 @@ export function Navbar({ manager, onLogout }: NavbarProps) {
               {item}
             </Button>
           ))}
+          <div className="flex items-center gap-2 px-2 pt-2 border-t border-[hsl(var(--border))] mt-1">
+            <Avatar className="h-7 w-7">
+              <AvatarFallback className="text-xs">{manager[0].toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm text-[hsl(var(--foreground))] truncate max-w-[180px]">{manager}</span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 w-fit">Manager</Badge>
+            </div>
+          </div>
         </div>
       )}
     </header>
