@@ -22,6 +22,9 @@ A full-stack employee operations dashboard with manager login, freeze/block work
   - Top skills chart.
   - Frozen/blocked-by-you table with actions.
 - Departments page with grouped employees, status breakdown, and top department skills.
+- API-driven infinite scroll on Employees page with paginated backend fetch (`limit`/`offset`).
+- Debounced search on Employees page to reduce database/API load while typing.
+- Automatic polling (every 30s) to refresh global employee state for dashboard/report views.
 
 ## Tech Stack
 
@@ -129,11 +132,48 @@ Use any of the following demo credentials:
 ## API Overview
 
 - `GET /api/employees`
-  - Returns employee list with computed `freezeDetails` and queue metadata.
+  - Dual mode endpoint:
+    - Without query params: returns full employee array (used by app-level polling).
+    - With query params (`limit`, `offset`, optional `q`): returns paginated object.
 - `POST /api/employees/:id/freeze`
   - Adds freeze request to queue after validations.
 - `PATCH /api/employees/:id/status`
   - Supports `blocked` and `available` transitions.
+
+### Paginated Employee Response
+
+When `GET /api/employees` is called with pagination/search params, response shape is:
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "limit": 50,
+  "offset": 0,
+  "hasMore": false
+}
+```
+
+Common examples:
+
+```bash
+GET /api/employees?limit=50&offset=0
+GET /api/employees?limit=50&offset=50
+GET /api/employees?limit=50&offset=0&q=react%20typescript
+```
+
+## Data Fetching Strategy
+
+- Global polling:
+  - The app refreshes the full employee dataset every 30 seconds.
+  - This keeps Dashboard, Reports, and Departments synchronized.
+- Employees page infinite scroll:
+  - Fetches page 1 using `limit=50&offset=0`.
+  - Loads more pages when the bottom sentinel enters viewport.
+  - Uses `offset=<currently_loaded_count>` for subsequent requests.
+- Debounced search:
+  - Search input is debounced (~350ms).
+  - Query is sent as `q=<search terms>` only after typing pauses.
 
 ## Build
 
