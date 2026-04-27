@@ -11,14 +11,13 @@ interface NavbarProps {
   onLogout: () => void
 }
 
-const NAV_ITEMS = ['Dashboard', 'Employees', 'Departments', 'Reports', 'Settings']
+const NAV_ITEMS = ['Dashboard', 'Employees', 'Departments', 'Reports']
 
 const NAV_ROUTES: Record<string, string> = {
   Dashboard: '/',
   Employees: '/employees',
   Departments: '/departments',
   Reports: '/reports',
-  Settings: '/settings',
 }
 
 export function Navbar({ manager, onLogout }: NavbarProps) {
