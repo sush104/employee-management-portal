@@ -40,14 +40,18 @@ function formatTimeRemaining(expiryDate: string): string {
   return `${minutes}m`
 }
 
-export function ReportsPage({ managerName, managerEmail, employees, onStatusChange }: ReportsPageProps) {
-  const [, setRefresh] = useState(0)
+function ExpiryCountdown({ expiryDate }: { expiryDate: string }) {
+  const [, setTick] = useState(0)
 
-  // Update countdown every second
   useEffect(() => {
-    const interval = setInterval(() => setRefresh(r => r + 1), 1000)
+    const interval = setInterval(() => setTick((t) => t + 1), 1000)
     return () => clearInterval(interval)
   }, [])
+
+  return <span className="font-semibold text-amber-700">{formatTimeRemaining(expiryDate)}</span>
+}
+
+export function ReportsPage({ managerName, managerEmail, employees, onStatusChange }: ReportsPageProps) {
   const total     = employees.length
   const available = employees.filter((e) => e.status === 'available').length
   const frozen    = employees.filter((e) => e.status === 'frozen').length
@@ -279,7 +283,7 @@ export function ReportsPage({ managerName, managerEmail, employees, onStatusChan
                       </TableCell>
                       <TableCell className="text-sm whitespace-nowrap">
                         {emp.status === 'frozen' && emp.freezeDetails?.expiryDate ? (
-                          <span className="font-semibold text-amber-700">{formatTimeRemaining(emp.freezeDetails.expiryDate)}</span>
+                          <ExpiryCountdown expiryDate={emp.freezeDetails.expiryDate} />
                         ) : (
                           <span className="text-[hsl(var(--muted-foreground))]">—</span>
                         )}
