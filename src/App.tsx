@@ -8,11 +8,26 @@ import { ReportsPage } from './pages/ReportsPage'
 import { DepartmentsPage } from './pages/DepartmentsPage'
 import type { Employee, Status, FreezeDetails } from './types/employee'
 
+const MANAGER_SESSION_KEY = 'emp-manager-session'
+
 function App() {
-  const [manager, setManager] = useState<string | null>(null)
+  const [manager, setManager] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const savedManager = window.localStorage.getItem(MANAGER_SESSION_KEY)
+    return savedManager && savedManager.trim() ? savedManager : null
+  })
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [releaseError, setReleaseError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (manager) {
+      window.localStorage.setItem(MANAGER_SESSION_KEY, manager)
+    } else {
+      window.localStorage.removeItem(MANAGER_SESSION_KEY)
+    }
+  }, [manager])
 
   useEffect(() => {
     let isMounted = true
