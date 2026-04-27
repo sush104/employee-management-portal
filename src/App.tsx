@@ -50,7 +50,7 @@ function App() {
 
   const managerEmail = manager.trim().toLowerCase()
 
-  async function handleStatusChange(id: number, status: Status, freezeDetails?: FreezeDetails) {
+  async function handleStatusChange(id: number, status: Status, freezeDetails?: FreezeDetails): Promise<Employee | null> {
     try {
       let res: Response
 
@@ -80,20 +80,22 @@ function App() {
       if (res.status === 403) {
         const data = await res.json()
         setReleaseError(data.error ?? 'You are not authorised to release this employee.')
-        return
+        return null
       }
       if (res.status === 400) {
         const data = await res.json()
         setReleaseError(data.error ?? 'Action not allowed.')
-        return
+        return null
       }
       if (!res.ok) throw new Error('Failed to update status')
       const updated: Employee = await res.json()
       setEmployees((prev) =>
         prev.map((e) => (e.id === id ? updated : e))
       )
+      return updated
     } catch (err) {
       console.error(err)
+      return null
     }
   }
 
@@ -131,7 +133,7 @@ function App() {
               <EmployeesPage
                 managerName={manager.split('@')[0].replace(/^./, (c) => c.toUpperCase())}
                 managerEmail={managerEmail}
-                employees={employees}
+                totalEmployees={employees.length}
                 onStatusChange={handleStatusChange}
               />
             }
