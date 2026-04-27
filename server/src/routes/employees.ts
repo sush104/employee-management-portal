@@ -86,11 +86,79 @@ async function hasColumn(columnName: string): Promise<boolean> {
   return rows.length > 0
 }
 
-employeeRouter.get('/', async (_req, res) => {
+employeeRouter.get('/', async (req, res) => {
   try {
     await releaseExpiredFreezes()
-    const { rows } = await pool.query('SELECT * FROM employees ORDER BY id')
-    res.json(rows.map(toEmployee))
+
+    const rawLimit = Number(req.query.limit)
+    const rawOffset = Number(req.query.offset)
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : null
+    const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0
+    const searchTerms = typeof req.query.q === 'string'
+      ? req.query.q
+          .split(/[\s,]+/)
+          .map((term) => term.trim().toLowerCase())
+          .filter(Boolean)
+      : []
+    const hasPagination = limit !== null || offset > 0 || searchTerms.length > 0
+
+    const whereParts: string[] = []
+    const params: unknown[] = []
+
+    if (searchTerms.length > 0) {
+      const termClauses = searchTerms.map((term) => {
+        params.push(`%${term}%`)
+        const searchParam = `$${params.length}`
+        return `(
+          LOWER(name) LIKE ${searchParam}
+          OR LOWER(role) LIKE ${searchParam}
+          OR LOWER(team) LIKE ${searchParam}
+          OR LOWER(department) LIKE ${searchParam}
+          OR EXISTS (
+            SELECT 1
+            FROM unnest(skills) AS skill
+            WHERE LOWER(skill) LIKE ${searchParam}
+          )
+        )`
+      })
+      whereParts.push(`(${termClauses.join(' OR ')})`)
+    }
+
+    const whereClause = whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : ''
+
+    if (!hasPagination) {
+      const { rows } = await pool.query(`SELECT * FROM employees ${whereClause} ORDER BY id`)
+      res.json(rows.map(toEmployee))
+      return
+    }
+
+    const countQuery = `SELECT COUNT(*)::int AS total FROM employees ${whereClause}`
+    const [{ total }] = (await pool.query<{ total: number }>(countQuery, params)).rows
+
+    const paginatedParams = [...params]
+    paginatedParams.push(limit ?? 50)
+    const limitParam = `$${paginatedParams.length}`
+    paginatedParams.push(offset)
+    const offsetParam = `$${paginatedParams.length}`
+
+    const dataQuery = `
+      SELECT *
+      FROM employees
+      ${whereClause}
+      ORDER BY id
+      LIMIT ${limitParam}
+      OFFSET ${offsetParam}`
+
+    const { rows } = await pool.query(dataQuery, paginatedParams)
+    const items = rows.map(toEmployee)
+
+    res.json({
+      items,
+      total,
+      limit: limit ?? 50,
+      offset,
+      hasMore: offset + items.length < total,
+    })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })
